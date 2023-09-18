@@ -91,7 +91,8 @@ app.get('/paper', async (req,res)=> {
 
 app.get('/paper/download',(req,res)=>{
   var filePath = path.join('./',req.query.path.replaceAll('\\\\','/'))
-  console.log(req.query.path.slice(8))
+  console.log("Inside download API call:-")
+  console.log(filePath)
   res.setHeader("fileName",req.query.path.slice(8))
   res.download(filePath)
 })
