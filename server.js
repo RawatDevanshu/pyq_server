@@ -94,7 +94,7 @@ app.get('/paper/download',(req,res)=>{
   console.log("Inside download API call:-")
   console.log(filePath.replace('\\','/'))
   res.setHeader("fileName",req.query.path.slice(8))
-  res.download(filePath)
+  res.download(filePath.replace('\\','/'))
 })
 
 app.post('/admin/login',async (req,res)=>{
