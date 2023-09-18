@@ -85,7 +85,6 @@ app.get('/paper', async (req,res)=> {
     const papers = await Paper
     .find({$and: [{$or: [{subject: re }, {course: re }, {term: re }]},{owner:ownerRE}]}).sort(sortBy).skip(page*papersPerPage).limit(papersPerPage)
     papers.forEach((paper)=>{paper.file.replace(/\\/g,'/')})
-    console.log(page)
     res.status(200).json(papers)    
 })
 
