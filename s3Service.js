@@ -25,3 +25,14 @@ exports.s3Downloadv2 = async(fileName) => {
     const result = await s3.getObject(params).promise();
     return result;
 }
+
+exports.s3Deletev2 = async(fileName) => {
+    const s3 = new S3();
+    const params = {
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: `${fileName}`,
+      };
+      
+    const result = await s3.deleteObject(params).promise();
+    return result;
+}

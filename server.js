@@ -5,7 +5,7 @@ const Paper = require('./models/paper')
 const adminModel = require('./models/admin')
 const mongoose = require('mongoose')
 const path = require('path')
-const { s3Uploadv2, s3Downloadv2 } = require("./s3Service");
+const { s3Uploadv2, s3Downloadv2, s3Deletev2 } = require("./s3Service");
 
 const app = express();
 app.use(express.json())
@@ -97,16 +97,17 @@ app.get('/paper', async (req,res)=> {
 })
 
 app.get('/paper/download',async (req,res)=>{
-  const downloadResult = await s3Downloadv2(req.query.name);
+  try{
   
-  // var filePath = path.join('./',req.query.path.replaceAll('\\\\','/'))
-  // console.log("Inside download API call:-")
-  // console.log(filePath.replace('\\','/'))
-  // res.setHeader("fileName",req.query.path.slice(8))
-
+  const downloadResult = await s3Downloadv2(req.query.name);
   console.log(downloadResult.ContentType)
   res.set('Content-Type', 'application/pdf')
   res.send(downloadResult.Body);
+}
+  catch(error){
+    console.log(error.code);
+    res.status(500).json({'error occured': error.code})
+  }
   // res.status(200).json({ message: 'done api call',downloadResult})
 })
 
@@ -130,13 +131,17 @@ app.post('/register',(req,res)=>{
   adminModel.create(req.body).then(admin => res.json(admin)).catch(err=> res.json(err))
 })
 
-app.delete('/del/:id', async(req,res)=>{
-  let delid = req.params.id;
+app.delete('/del/', async(req,res)=>{
+  let delid = req.query.id;
+  let delKey = req.query.key;
 
+  const deleteResult = await s3Deletev2(delKey);
   let resVal = await Paper.findOneAndDelete({_id:delid})  
   if(resVal == null){
     res.send("No such record found");
-  }else{res.send(resVal)}
+  }else{
+    console.log("DELETED")
+    res.send(resVal)}
 })
 
 connectDB().then(()=>{app.listen(3000,"0.0.0.0", () => {
