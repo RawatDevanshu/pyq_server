@@ -4,8 +4,8 @@ const multer = require('multer');
 const Paper = require('./models/paper')
 const adminModel = require('./models/admin')
 const mongoose = require('mongoose')
-const path = require('path');
-const { s3Uploadv2 } = require("./s3Service");
+const path = require('path')
+const { s3Uploadv2, s3Downloadv2 } = require("./s3Service");
 
 const app = express();
 app.use(express.json())
@@ -51,12 +51,12 @@ app.post('/paper/upload',upload.single('paper'), async (req, res) => {
       course,
       semester,
       term,
-      file: uploadResult.Location, // Store the file path in the database
+      file: uploadResult.Key, // Store the file path in the database
       owner: owner
     });
 
     await newPaper.save();
-    paperId = await newPaper._id;
+    paperId = await newPaper.file;
 
     console.log(paperId);
 
@@ -96,12 +96,18 @@ app.get('/paper', async (req,res)=> {
     res.status(200).json(papers)    
 })
 
-app.get('/paper/download',(req,res)=>{
-  var filePath = path.join('./',req.query.path.replaceAll('\\\\','/'))
-  console.log("Inside download API call:-")
-  console.log(filePath.replace('\\','/'))
-  res.setHeader("fileName",req.query.path.slice(8))
-  res.download(filePath.replace('\\','/'))
+app.get('/paper/download',async (req,res)=>{
+  const downloadResult = await s3Downloadv2(req.query.name);
+  
+  // var filePath = path.join('./',req.query.path.replaceAll('\\\\','/'))
+  // console.log("Inside download API call:-")
+  // console.log(filePath.replace('\\','/'))
+  // res.setHeader("fileName",req.query.path.slice(8))
+
+  console.log(downloadResult.ContentType)
+  res.set('Content-Type', 'application/pdf')
+  res.send(downloadResult.Body);
+  // res.status(200).json({ message: 'done api call',downloadResult})
 })
 
 app.post('/admin/login',async (req,res)=>{
