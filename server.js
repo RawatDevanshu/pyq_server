@@ -1,9 +1,11 @@
+require("dotenv").config();
 const express = require('express');
 const multer = require('multer');
 const Paper = require('./models/paper')
 const adminModel = require('./models/admin')
 const mongoose = require('mongoose')
-const path = require('path')
+const path = require('path');
+const { s3Uploadv2 } = require("./s3Service");
 
 const app = express();
 app.use(express.json())
@@ -26,19 +28,22 @@ const connectDB = async()=>{
 const db = mongoose.connection
 db.on('error',console.error.bind(console, 'MongoDB connection error:'))
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: 'uploads/', // Set your upload destination
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
+// const storage = multer.diskStorage({
+//   destination: 'uploads/', // Set your upload destination
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + '-' + file.originalname);
+//   }
+// });
+const storage = multer.memoryStorage()
+
 const upload = multer({ storage });
 
 // Handle paper upload
-app.post('/paper/upload', upload.single('paper'), async (req, res) => {
+app.post('/paper/upload',upload.single('paper'), async (req, res) => {
   try {
+    const uploadResult = await s3Uploadv2(req.file);
     const { subject, year, course, semester, term , owner} = req.body; // Assuming you're sending subject and year along with the upload
-
+    console.log(uploadResult.Location);
     // Create a new paper document in MongoDB
     const newPaper = new Paper({
       subject,
@@ -46,13 +51,16 @@ app.post('/paper/upload', upload.single('paper'), async (req, res) => {
       course,
       semester,
       term,
-      file: req.file.path, // Store the file path in the database
+      file: uploadResult.Location, // Store the file path in the database
       owner: owner
     });
 
     await newPaper.save();
+    paperId = await newPaper._id;
 
-    res.status(200).json({ message: 'Paper uploaded successfully' });
+    console.log(paperId);
+
+    res.status(200).json({ message: 'Paper uploaded successfully',uploadResult });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error uploading paper' });
