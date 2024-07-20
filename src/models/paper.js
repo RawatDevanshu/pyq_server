@@ -1,42 +1,42 @@
-const mongoose = require('mongoose');
-const {Schema} = mongoose;
+const mongoose = require("mongoose");
+const { Schema } = mongoose;
 
 const paperSchema = new mongoose.Schema({
   subject: {
     type: String,
-    required: true
+    required: true,
   },
   year: {
     type: Number,
-    required: true
+    required: true,
   },
-  course:{
+  course: {
     type: String,
-    required: true
+    required: true,
   },
-  semester:{
+  semester: {
     type: Number,
-    required: true
+    required: true,
   },
-  term:{
+  term: {
     type: String,
-    required: true
+    required: true,
   },
   file: {
     type: String, // Store the file path or URL
-    required: true
+    required: true,
   },
-  owner:{
+  owner: {
     type: String,
     required: true,
   },
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
-
 });
 
-const Paper = mongoose.model('Papers', paperSchema);
+const Paper = mongoose.model("Papers", paperSchema);
 
 module.exports = Paper;
+
