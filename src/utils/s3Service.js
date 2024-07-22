@@ -1,9 +1,16 @@
-const { S3 } = require("aws-sdk");
-const uuid = require("uuid").v4;
+import dotenv from "dotenv";
+import AWS from "aws-sdk";
+import { v4 as uuid } from "uuid";
 
-exports.s3Uploadv2 = async (file) => {
-  const s3 = new S3();
+dotenv.config({ path: "./.env" });
 
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_ACCESS_KEY_SECRET,
+  region: process.env.AWS_REGION,
+});
+
+const s3Uploadv2 = async (file) => {
   const param = {
     Bucket: process.env.AWS_BUCKET_NAME,
     Key: `uploads/${uuid()}-${file.originalname}`,
@@ -14,8 +21,7 @@ exports.s3Uploadv2 = async (file) => {
   return result;
 };
 
-exports.s3Downloadv2 = async (fileName) => {
-  const s3 = new S3();
+const s3Downloadv2 = async (fileName) => {
   const params = {
     Bucket: process.env.AWS_BUCKET_NAME,
     Key: `${fileName}`,
@@ -26,8 +32,7 @@ exports.s3Downloadv2 = async (fileName) => {
   return result;
 };
 
-exports.s3Deletev2 = async (fileName) => {
-  const s3 = new S3();
+const s3Deletev2 = async (fileName) => {
   const params = {
     Bucket: process.env.AWS_BUCKET_NAME,
     Key: `${fileName}`,
@@ -37,3 +42,4 @@ exports.s3Deletev2 = async (fileName) => {
   return result;
 };
 
+export { s3Uploadv2, s3Downloadv2, s3Deletev2 };

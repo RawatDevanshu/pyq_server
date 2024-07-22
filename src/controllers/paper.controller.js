@@ -1,10 +1,11 @@
-import Paper from "../models/paper.js";
+import Paper from "../models/paper.model.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { s3Uploadv2, s3Downloadv2, s3Deletev2 } from "../utils/s3Service.js";
 
 const uploadPaper = asyncHandler(async (req, res) => {
   const uploadResult = await s3Uploadv2(req.file);
   const { subject, year, course, semester, term, owner } = req.body; // Assuming you're sending subject and year along with the upload
-  console.log(uploadResult.Location);
-  // Create a new paper document in MongoDB
+
   const newPaper = new Paper({
     subject,
     year,
@@ -16,9 +17,6 @@ const uploadPaper = asyncHandler(async (req, res) => {
   });
 
   await newPaper.save();
-  paperId = newPaper.file;
-
-  console.log(paperId);
 
   res
     .status(200)
@@ -27,7 +25,6 @@ const uploadPaper = asyncHandler(async (req, res) => {
 
 const downloadPaper = asyncHandler(async (req, res) => {
   const downloadResult = await s3Downloadv2(req.query.name);
-  console.log(downloadResult.ContentType);
   res.set("Content-Type", "application/pdf");
   res.send(downloadResult.Body);
 });
@@ -67,6 +64,8 @@ const getPapers = asyncHandler(async (req, res) => {
   let re = new RegExp(search.length ? search : /(?:)/, "i");
   let ownerRE = new RegExp(owner.length ? owner : /[A-Za-z0-9]+/i);
   // console.log("Here is RE: -"+re+"- RE end")
+  let count = await Paper.count();
+  console.log(count);
   const papers = await Paper.find({
     $and: [
       { $or: [{ subject: re }, { course: re }, { term: re }] },

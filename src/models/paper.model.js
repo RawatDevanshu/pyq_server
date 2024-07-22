@@ -1,5 +1,4 @@
-const mongoose = require("mongoose");
-const { Schema } = mongoose;
+import mongoose from "mongoose";
 
 const paperSchema = new mongoose.Schema({
   subject: {
@@ -38,5 +37,4 @@ const paperSchema = new mongoose.Schema({
 
 const Paper = mongoose.model("Papers", paperSchema);
 
-module.exports = Paper;
-
+export default Paper;
