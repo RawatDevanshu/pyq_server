@@ -1,4 +1,5 @@
 import Paper from "../models/paper.model.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { s3Uploadv2, s3Downloadv2, s3Deletev2 } from "../utils/s3Service.js";
 
@@ -20,11 +21,14 @@ const uploadPaper = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json({ message: "Paper uploaded successfully", uploadResult });
+    .json(
+      new ApiResponse(200, { uploadResult }, "Paper uploaded successfully"),
+    );
 });
 
 const downloadPaper = asyncHandler(async (req, res) => {
   const downloadResult = await s3Downloadv2(req.query.name);
+
   res.set("Content-Type", "application/pdf");
   res.send(downloadResult.Body);
 });
@@ -34,13 +38,14 @@ const deletePaper = asyncHandler(async (req, res) => {
   let delKey = req.query.key;
 
   const deleteResult = await s3Deletev2(delKey);
-  let resVal = await Paper.findOneAndDelete({ _id: delid });
-  if (resVal == null) {
-    res.send("No such record found");
-  } else {
-    console.log("DELETED");
-    res.send(resVal);
+  let isDeleted = await Paper.findOneAndDelete({ _id: delid });
+
+  if (isDeleted == null) {
+    throw new ApiError(404, "Paper not found");
   }
+  res
+    .status(200)
+    .json(new ApiResponse(200, isDeleted, "Paper deleted successfully"));
 });
 
 const getPapers = asyncHandler(async (req, res) => {
@@ -64,8 +69,6 @@ const getPapers = asyncHandler(async (req, res) => {
   let re = new RegExp(search.length ? search : /(?:)/, "i");
   let ownerRE = new RegExp(owner.length ? owner : /[A-Za-z0-9]+/i);
   // console.log("Here is RE: -"+re+"- RE end")
-  let count = await Paper.count();
-  console.log(count);
   const papers = await Paper.find({
     $and: [
       { $or: [{ subject: re }, { course: re }, { term: re }] },
@@ -78,7 +81,9 @@ const getPapers = asyncHandler(async (req, res) => {
   papers.forEach((paper) => {
     paper.file.replace(/\\/g, "/");
   });
-  res.status(200).json(papers);
+  res
+    .status(200)
+    .json(new ApiResponse(200, papers, "Papers fetched successfully"));
 });
 
 export { uploadPaper, downloadPaper, deletePaper, getPapers };

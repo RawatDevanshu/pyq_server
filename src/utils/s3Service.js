@@ -13,7 +13,7 @@ const s3 = new AWS.S3({
 const s3Uploadv2 = async (file) => {
   const param = {
     Bucket: process.env.AWS_BUCKET_NAME,
-    Key: `uploads/${uuid()}-${file.originalname}`,
+    Key: `${uuid()}-${file.originalname}`,
     Body: file.buffer,
     ContentType: "application/pdf",
   };
